@@ -1,30 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Autofac;
 using HtmlAgilityPack;
 using MySql.Data.MySqlClient;
-using Nelson;
+using Nelson.Dependency;
 using Pl.Db.Model;
 
-namespace ConsoleApp3
+namespace Nelson
 {
     class Program
     {
         static void Main(string[] args)
         {
-            var conn = "Server = mn02.webd.pl; Database = msit_pl; Uid = msit_pl; Pwd = dy-[zzV7xCGI; ";
-
-            var connection = new MySqlConnection(conn);
+            var container = NelsonContainerBuilder.GetContainer();
 
             var reader = new WebReader();
 
 
-            var tableReader = new TableReader(reader, new ClubCommand(connection));
 
-            tableReader.ReadTable();
+            var leagueService = container.Resolve<LeagueService>();// new LeagueService(connection, reader);
+            leagueService.Run();
 
 
-            reader.Test();
+            var eventService = container.Resolve<EventService>();
+            eventService.Run();
+
+
+            return;
+            var events = reader.Test();
+
+            var command = container.Resolve<ClubCommand>();
+
+
+            foreach (var @event in events)
+            {
+                command.SaveEvent(@event);
+            }
 
             var url = "https://www.flashscore.pl/druzyna/manchester-utd/ppjDR086/sklad/";
 
@@ -56,12 +68,12 @@ namespace ConsoleApp3
             list = list.Distinct().OrderBy(x => x.Name).ToList();
 
 
-            var command = new PlayerCommand(connection, new PlayerQuery(connection));
+            //var command = new PlayerCommand(connection, new PlayerQuery(connection));
 
-            foreach (var player in list)
-            {
-                command.Save(player);
-            }
+            //foreach (var player in list)
+            //{
+            //    command.Save(player);
+            //}
 
 
 

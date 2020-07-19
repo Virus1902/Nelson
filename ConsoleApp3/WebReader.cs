@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.Linq;
 using HtmlAgilityPack;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Internal;
 using Pl.Db.Model;
 
 namespace Nelson
@@ -19,7 +19,7 @@ namespace Nelson
 
         public string ReadWebSite(string url)
         {
-            driver = new ChromeDriver();
+            driver = new ChromeDriver("./");
             js = (IJavaScriptExecutor)driver;
 
             driver.Navigate().GoToUrl(url);
@@ -33,16 +33,14 @@ namespace Nelson
         }
 
 
-        public void Test()
+        public List<Event> Test()
         {
-            driver = new ChromeDriver();
+            driver = new ChromeDriver("./");
             js = (IJavaScriptExecutor)driver;
             vars = new Dictionary<string, object>();
 
-            driver.Navigate().GoToUrl("https://www.flashscore.pl/pilka-nozna/anglia/premier-league/");
+            driver.Navigate().GoToUrl("https://www.flashscore.pl/pilka-nozna/anglia/premier-league/wyniki/");
             driver.Manage().Window.Size = new System.Drawing.Size(1235, 688);
-            driver.FindElement(By.LinkText("Premier League")).Click();
-            driver.FindElement(By.Id("li1")).Click();
             
 
 
@@ -67,41 +65,47 @@ namespace Nelson
 
             var events = matches.Select(matchNode => EventParser.ParseEvent(matchNode.InnerHtml)).ToList();
 
-
-        }
-    }
-
-    public class EventParser
-    {
-        public static DateTime ParseDateTime(string eventTime, int year)
-        {
-            var time = eventTime.Replace(". ", $".{year} ");
-
-
-            return DateTime.ParseExact(time, "dd.MM.yyyy HH:mm", new DateTimeFormatInfo());
+            return events;
         }
 
-        public static Event ParseEvent(string eventHtml)
+        public string ReadEventsWebSite(string url, bool readMore)
         {
-            var ev = new Event();
-            var doc = new HtmlDocument();
-            doc.LoadHtml(eventHtml);
-            var timeNode = doc.DocumentNode.SelectSingleNode("//div[@class='event__time']").InnerHtml;
+            driver = new ChromeDriver("./");
+            js = (IJavaScriptExecutor)driver;
 
-            ev.Home = doc.DocumentNode.ChildNodes.Single(x => x.HasClass("event__participant--home")).InnerText.Trim();
-            ev.Away = doc.DocumentNode.ChildNodes.Single(x => x.HasClass("event__participant--away")).InnerText.Trim();
-            ev.EventTime = ParseDateTime(timeNode, 2020);
+            driver.Navigate().GoToUrl(url);
 
-            var resultStr = doc.DocumentNode.ChildNodes.Single(x => x.HasClass("event__scores")).InnerText.Replace("&nbsp;", "").Trim();
+            
 
-            var t = resultStr.IndexOf('-');
-            var homeResult = resultStr.Substring(0, t);
-            var awayResult = resultStr.Substring(t + 1);
+            if (readMore)
+            {
+                var isMore = true;
 
-            ev.HomeResult = Convert.ToInt32(homeResult);
-            ev.AwayResult = Convert.ToInt32(awayResult);
+                while (isMore)
+                {
+                    try
+                    {
+                        var moreEvent = driver.FindElement(By.ClassName("event__more"));
 
-            return ev;
+                        if (moreEvent != null)
+                        {
+                            var action = new Actions(driver);
+
+                            action.MoveToElement(moreEvent).Click().Build().Perform();
+                        }
+                    }
+                    catch (NoSuchElementException)
+                    {
+                        isMore = false;
+                    }
+                }
+            }
+
+            var pageSource = driver.PageSource;
+
+            driver.Close();
+
+            return pageSource;
         }
     }
 }
