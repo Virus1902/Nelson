@@ -22,9 +22,8 @@ namespace Nelson
             driver = new ChromeDriver();
             js = (IJavaScriptExecutor)driver;
 
-            driver.Navigate().GoToUrl("https://www.flashscore.pl/pilka-nozna/anglia/premier-league/");
-            driver.FindElement(By.Id("li3")).Click();
-
+            driver.Navigate().GoToUrl(url);
+            //driver.FindElement(By.Id("li3")).Click();
 
             var pageSource = driver.PageSource;
             
@@ -42,8 +41,9 @@ namespace Nelson
 
             driver.Navigate().GoToUrl("https://www.flashscore.pl/pilka-nozna/anglia/premier-league/");
             driver.Manage().Window.Size = new System.Drawing.Size(1235, 688);
-            //driver.FindElement(By.LinkText("Premier League")).Click();
+            driver.FindElement(By.LinkText("Premier League")).Click();
             driver.FindElement(By.Id("li1")).Click();
+            
 
 
             var html = driver.PageSource;

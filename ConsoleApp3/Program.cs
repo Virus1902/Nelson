@@ -12,18 +12,20 @@ namespace ConsoleApp3
     {
         static void Main(string[] args)
         {
+            var conn = "Server = mn02.webd.pl; Database = msit_pl; Uid = msit_pl; Pwd = dy-[zzV7xCGI; ";
+
+            var connection = new MySqlConnection(conn);
 
             var reader = new WebReader();
 
 
-            var tableReader = new TableReader(reader);
+            var tableReader = new TableReader(reader, new ClubCommand(connection));
 
             tableReader.ReadTable();
 
 
             reader.Test();
 
-            var conn = "Server = mn02.webd.pl; Database = msit_pl; Uid = msit_pl; Pwd = dy-[zzV7xCGI; ";
             var url = "https://www.flashscore.pl/druzyna/manchester-utd/ppjDR086/sklad/";
 
             var web = new HtmlWeb();
@@ -34,7 +36,6 @@ namespace ConsoleApp3
 
 
 
-            var connection = new MySqlConnection(conn);
 
 
             var list = new List<Player>();
